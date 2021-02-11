@@ -1,0 +1,52 @@
+#!/bin/bash
+#getopt模板
+#getopt重排参数 $n未改变
+#-o短选项，--long或者-l长选项 选项后一个冒号标识必选参数，两个冒号表示可选参数，没有冒号的不会处理，参数重排后会按顺序排在--后
+#set --会重排参数，改变$n
+
+###在脚本开头添加默认变量值，后面处理参数后改变变量，这样最终处理逻辑相同，只是参数不同处理的流程也不同，后续处理步骤应包含各种情况的处理
+arga="defaultA"
+argb=""
+argc="defaultC"
+TEMP=`getopt -o ab:c:: --long a-long,b-long:,c-long:: -n 'example.bash' -- "$@"`
+[[ $? != 0 ]] && { echo "unexpected error...";exit 1; }
+
+eval set -- $TEMP
+#set改变$n的值，与getopt处理后的值相同
+while true ; do
+        case "$1" in
+                #a无参数，可以用于改变一些默认设置
+                -a|--a-long)
+                    arga="changedA"
+                    shift
+                    ;;
+                #处理完b后移除前两个参数
+                -b|--b-long)
+                    echo "Option b, argument $2"
+                    shift 2
+                    ;;
+                -c|--c-long)
+                        #可选参数，如果
+                        case "$2" in
+                                "")
+                                    argc="changedC"
+                                    shift 2
+                                ;;
+                                *)
+                                    argc=$2
+                                    echo "userdefin"
+                                    shift 2
+                                ;;
+                        esac
+                        ;;
+                --)
+                    shift
+                    break
+                    ;;
+                *)
+                    echo "Internal error!"
+                    exit 1
+                    ;;
+        esac
+done
+#处理完选项参数后剩余的参数
